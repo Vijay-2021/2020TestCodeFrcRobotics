@@ -4,7 +4,12 @@
 /* must be accompanied by the FIRST BSD license file in the root directory of */
 /* the project.                                                               */
 /*----------------------------------------------------------------------------*/
+/*
+*Pid tuning methods tried
+* random guess: didn't work
+* double p until no oscilatoin, then double i
 
+*/
 package frc.robot.subsystems;
 
 import com.revrobotics.CANEncoder;
@@ -75,31 +80,37 @@ public class DriveTrain extends SubsystemBase {
 
 
     // PID coefficients
-    kP = 0.000005; 
-    kI = 0.0000002;
-    kD = 0; 
+    double p = 0.000001;//0.001
+    double i = 0.000;
+    double d  = 0.00;
+    double f = 0.00018;
+  
+    kP = p; 
+    kI = d;
+    kD = i; 
+  
     kIz = 0; 
-    kFF = 0.0; 
+    kFF = 0.000178; //loeft = .000178 
     kMaxOutput = 1; 
     kMinOutput = -1;
-    maxRPM = 4000;
+    maxRPM = 5500;
 
     // Smart Motion Coefficients
-    maxVel = 4000; // rpm
-    maxAcc = 6000;
+    maxVel = 5500; // rpm
+    maxAcc = 5000;
 
-    kP2 = 0.000005; 
-    kI2 = 0.0000002;
-    kD2 = 0; 
+    kP2 = p;//0.000065
+    kI2 = i;// 0.0000029
+    kD2 = d; //0.00095
     kIz2 = 0; 
-    kFF2 = 0.0; 
+    kFF2 = 0.0001823;// working ff for 6ft/s/s0.000182; //right motor
     kMaxOutput2 = 1; 
     kMinOutput2 = -1;
-    maxRPM2 = 3500;
+    maxRPM2 = 5500;
 
     // Smart Motion Coefficients
-    maxVel2 = 4000; // rpm
-    maxAcc2 = 6000;
+    maxVel2 = 5500; // rpm
+    maxAcc2 = 5000;
     // set PID coefficients
     m_pidController.setP(kP);
     m_pidController.setI(kI);
@@ -107,7 +118,8 @@ public class DriveTrain extends SubsystemBase {
     m_pidController.setIZone(kIz);
     m_pidController.setFF(kFF);
     m_pidController.setOutputRange(kMinOutput, kMaxOutput);
-
+    //leftDriveMaster.setControlFramePeriodMs(periodMs);
+    //m_pidController.
     m_pidController2.setP(kP2);
     m_pidController2.setI(kI2);
     m_pidController2.setD(kD2);
@@ -145,9 +157,13 @@ public class DriveTrain extends SubsystemBase {
   public double returnAngle(){
     return navx.getAngle();
   }
-  public void setVelocity(double velocity, double heading){
-    m_pidController.setReference(-velocity+heading,ControlType.kVelocity);
-    m_pidController2.setReference(velocity+heading,ControlType.kVelocity);
+  
+  public void setVelocity(double left_velocity,double right_velocity, double heading){
+    m_pidController.setReference(-left_velocity+heading,ControlType.kVelocity);
+    m_pidController2.setReference(right_velocity+heading,ControlType.kVelocity);
+  }
+  public double returnVelocity(){
+    return leftEncoder.getVelocity();
   }
   public void setBrake(){
     leftDriveMaster.setIdleMode(IdleMode.kBrake);
@@ -165,6 +181,10 @@ public class DriveTrain extends SubsystemBase {
     leftDriveFollower2.setIdleMode(IdleMode.kCoast);
     rightDriveFollower1.setIdleMode(IdleMode.kCoast);
     rightDriveFollower2.setIdleMode(IdleMode.kCoast);
+  }
+  public void arcadeDrive(double speed ,double turn){
+    leftDriveMaster.set(speed + turn);
+    rightDriveMaster.set(-speed+turn);
   }
 
   @Override

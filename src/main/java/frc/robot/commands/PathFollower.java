@@ -7,6 +7,7 @@
 
 package frc.robot.commands;
 
+import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.CommandBase;
 import frc.paths.GenPathSetup;
@@ -17,6 +18,8 @@ public class PathFollower extends CommandBase {
   GenPathSetup pathinst; 
   straight10ft straight10;
   int currentLine = 0;
+  double startTime = 0;
+  double endTime =0;
   private final DriveTrain trains; 
   /**
    * Creates a new PathFollower.
@@ -33,7 +36,7 @@ public class PathFollower extends CommandBase {
     pathinst = new GenPathSetup();
     straight10 = new straight10ft();
     trains.resetNavX();
-
+    startTime = System.currentTimeMillis();
   }
 
   // Called every time the scheduler runs while the command is scheduled.
@@ -46,18 +49,24 @@ public class PathFollower extends CommandBase {
     SmartDashboard.putNumber("your angle" , m_currentHeading);
     SmartDashboard.putNumber("path heading", Math.toDegrees(path_heading));
     SmartDashboard.putNumber("smaple heading diff",Math.toDegrees(heading_difference));
-    double rightVelocity = straight10.getPath()[currentLine][pathinst.rightVel()];
-    SmartDashboard.putNumber("Right velocity", rightVelocity);
-    trains.setVelocity(straight10.getPath()[currentLine][pathinst.leftVel()]*(120*11.111/Math.PI),6.25*heading_difference);
-    
+    double leftVelocity = straight10.getPath()[currentLine][pathinst.leftVel()]*(120*11.111/Math.PI);
+    SmartDashboard.putNumber("Left Velociyt difference ",leftVelocity+ trains.returnVelocity());
+    SmartDashboard.putNumber("Left Velocity", trains.returnVelocity());
+    SmartDashboard.putNumber("Path left velocity", leftVelocity);
+    trains.setVelocity(straight10.getPath()[currentLine][pathinst.leftVel()]*(120*11.111/Math.PI),straight10.getPath()[currentLine][pathinst.rightVel()]*(120*11.111/Math.PI),6.25*heading_difference);
+ 
     currentLine++;
   }
 
   // Called once the command ends or is interrupted.
   @Override
   public void end(final boolean interrupted) {
+    trains.arcadeDrive(0, 0);
+    double endTime =  System.currentTimeMillis();
+    String timeDiff = Double.toString(endTime-startTime);
+    DriverStation.reportError("Time difference between start and end of path" + timeDiff ,false);
   }
-
+  
   // Returns true when the command should end.
   @Override
   public boolean isFinished() {
